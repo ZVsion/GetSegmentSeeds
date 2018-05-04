@@ -23,41 +23,52 @@ class Example(QWidget):
 
 
     def initUI(self):
-        self.resize(1000, 600)
 
         clearButton = QPushButton("Clear All Seeds")
         clearButton.setStyleSheet("background-color:white")
         clearButton.clicked.connect(self.on_clear)
 
-        segmentButton = QPushButton("Segment Image")
+        segmentButton = QPushButton("Finish")
         segmentButton.setStyleSheet("background-color:white")
         segmentButton.clicked.connect(self.on_segment)
+
+        nextButton = QPushButton("next")
+        nextButton.setStyleSheet("background-color:white")
+        nextButton.clicked.connect(self.on_skip)
+
+        lastButton = QPushButton("last")
+        lastButton.setStyleSheet("background-color:white")
+        lastButton.clicked.connect(self.on_last)
 
         hbox = QHBoxLayout()
         # hbox.addWidget(foregroundButton)
         # hbox.addWidget(backgroundButton)
         hbox.addWidget(clearButton)
         hbox.addWidget(segmentButton)
+        hbox.addWidget(lastButton)
+        hbox.addWidget(nextButton)
+
+
         hbox.addStretch(1)
 
         self.seedLabel = QLabel()
 
-        self.seedLabel.setAlignment(Qt.AlignCenter)
+        # self.seedLabel.setAlignment(Qt.AlignCenter)
         self.seedLabel.mousePressEvent = self.mouse_down
         self.seedLabel.mouseMoveEvent = self.mouse_drag
         self.seedLabel.setPixmap(QPixmap.fromImage(
             self.get_qimage(self.get_image_with_overlay())))
 
-        scroll1 = QScrollArea()
-        scroll1.setWidgetResizable(False)
-        scroll1.setWidget(self.seedLabel)
-        scroll1.setAlignment(Qt.AlignCenter)
+        # scroll1 = QScrollArea()
+        # scroll1.setWidgetResizable(False)
+        # scroll1.setWidget(self.seedLabel)
+        # scroll1.setAlignment(Qt.AlignCenter)
 
         imagebox = QHBoxLayout()
-        imagebox.addWidget(scroll1)
+        # imagebox.addWidget(scroll1)
+        imagebox.addWidget(self.seedLabel)
 
         vbox = QVBoxLayout()
-
 
         vbox.addLayout(hbox)
         vbox.addLayout(imagebox)
@@ -69,7 +80,7 @@ class Example(QWidget):
     @staticmethod
     def get_qimage(cvimage):
         height, width, bytes_per_pix = cvimage.shape
-        bytes_per_line = width * bytes_per_pix;
+        bytes_per_line = width * bytes_per_pix
 
         cv2.cvtColor(cvimage, cv2.COLOR_BGR2RGB, cvimage)
         return QImage(cvimage.data, width, height, bytes_per_line, QImage.Format_RGB888)
@@ -107,6 +118,24 @@ class Example(QWidget):
 
         self.seedLabel.setPixmap(QPixmap.fromImage(
             self.get_qimage(self.get_image_with_overlay())))
+    @pyqtSlot()
+    def on_skip(self):
+        self.id += 1
+        self.image = cv2.imread("./dataset/images/" + self.images[self.id])
+        self.overlay = np.zeros_like(self.image)
+
+        self.seedLabel.setPixmap(QPixmap.fromImage(
+            self.get_qimage(self.get_image_with_overlay())))
+
+    @pyqtSlot()
+    def on_last(self):
+        self.id -= 1
+        self.image = cv2.imread("./dataset/images/" + self.images[self.id])
+        self.overlay = np.zeros_like(self.image)
+
+        self.seedLabel.setPixmap(QPixmap.fromImage(
+            self.get_qimage(self.get_image_with_overlay())))
+
 
     @pyqtSlot()
     def on_clear(self):
