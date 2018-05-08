@@ -23,6 +23,7 @@ class Example(QWidget):
         self.seedStartY = 0
         self.seedReleaseX = 0
         self.seedReleaseY = 0
+        self.IsEraser = False
 
         self.initUI()
 
@@ -47,13 +48,18 @@ class Example(QWidget):
 
         self.thinkness = QLineEdit("3")
         self.thinkness.setStyleSheet("background-color:white")
-        self.thinkness.setMaximumWidth(20)
+        self.thinkness.setMaximumWidth(30)
+
+        self.eraserButton = QPushButton("eraser")
+        self.eraserButton.setStyleSheet("background-color:white")
+        self.eraserButton.clicked.connect(self.on_eraser)
 
 
         hbox = QHBoxLayout()
         # hbox.addWidget(foregroundButton)
         # hbox.addWidget(backgroundButton)
         hbox.addWidget(clearButton)
+        hbox.addWidget(self.eraserButton)
         hbox.addWidget(segmentButton)
         hbox.addWidget(lastButton)
         hbox.addWidget(nextButton)
@@ -113,12 +119,17 @@ class Example(QWidget):
         self.seedStartY = event.y()
         self.seedReleaseX = event.x()
         self.seedReleaseY = event.y()
-        if self.seed_type == 1:
-            cv2.circle(temp_overlay, (self.seedStartX, self.seedStartY), int(thinkness / 2), (255, 255, 255), int(thinkness / 2))
-            # self.temp_overlay[event.y(), event.x()] = [255, 255, 255]
+        if not self.IsEraser:
+            if self.seed_type == 1:
+                cv2.circle(temp_overlay, (self.seedStartX, self.seedStartY), int(thinkness / 2), (255, 255, 255), int(thinkness / 2))
+                # self.temp_overlay[event.y(), event.x()] = [255, 255, 255]
+            else:
+                cv2.circle(temp_overlay, (self.seedStartX, self.seedStartY), int(thinkness / 2), (0, 0, 255), int(thinkness / 2))
+                # self.temp_overlay[event.y(), event.x()] = [0, 0, 255]
         else:
-            cv2.circle(temp_overlay, (self.seedStartX, self.seedStartY), int(thinkness / 2), (0, 0, 255), int(thinkness / 2))
-            # self.temp_overlay[event.y(), event.x()] = [0, 0, 255]
+            cv2.circle(self.overlay, (self.seedStartX, self.seedStartY), int(thinkness / 2) + 1, (0, 0, 0),
+                       int(thinkness / 2) + 1)
+
         self.seedLabel.setPixmap(QPixmap.fromImage(
                 self.get_qimage(temp_overlay)))
 
@@ -129,11 +140,15 @@ class Example(QWidget):
         self.seedReleaseY = event.y()
         temp_overlay = self.get_image_with_overlay()
 
-        if self.seed_type == 1:
-            cv2.line(temp_overlay, (self.seedStartX, self.seedStartY), (self.seedReleaseX, self.seedReleaseY), (255, 255, 255), thinkness)
-            # self.overlay[event.y(), event.x()] = [255, 255, 255]
+        if not self.IsEraser:
+            if self.seed_type == 1:
+                cv2.line(temp_overlay, (self.seedStartX, self.seedStartY), (self.seedReleaseX, self.seedReleaseY), (255, 255, 255), thinkness)
+                # self.overlay[event.y(), event.x()] = [255, 255, 255]
+            else:
+                cv2.line(temp_overlay, (self.seedStartX, self.seedStartY), (self.seedReleaseX, self.seedReleaseY), (0, 0, 255), thinkness)
         else:
-            cv2.line(temp_overlay, (self.seedStartX, self.seedStartY), (self.seedReleaseX, self.seedReleaseY), (0, 0, 255), thinkness)
+            cv2.circle(self.overlay, (self.seedReleaseX, self.seedReleaseY), int(thinkness / 2) + 1, (0, 0, 0),
+                       int(thinkness / 2) + 1)
 
         self.seedLabel.setPixmap(QPixmap.fromImage(
                 self.get_qimage(temp_overlay)))
@@ -142,13 +157,25 @@ class Example(QWidget):
     def mouse_release(self, event):
         thinkness = int(self.thinkness.text())
 
-        if self.seed_type == 1:
-            cv2.line(self.overlay, (self.seedStartX, self.seedStartY), (self.seedReleaseX, self.seedReleaseY), (255, 255, 255), thinkness)
-        else:
-            cv2.line(self.overlay, (self.seedStartX, self.seedStartY), (self.seedReleaseX, self.seedReleaseY), (0, 0, 255), thinkness)
+        if not self.IsEraser:
+            if self.seed_type == 1:
+                cv2.line(self.overlay, (self.seedStartX, self.seedStartY), (self.seedReleaseX, self.seedReleaseY), (255, 255, 255), thinkness)
+            else:
+                cv2.line(self.overlay, (self.seedStartX, self.seedStartY), (self.seedReleaseX, self.seedReleaseY), (0, 0, 255), thinkness)
+        # else:
+        #     cv2.line(self.overlay, (self.seedStartX, self.seedStartY), (self.seedReleaseX, self.seedReleaseY), (0, 0, 0), thinkness)
 
         self.seedLabel.setPixmap(QPixmap.fromImage(
                 self.get_qimage(self.get_image_with_overlay())))
+
+    @pyqtSlot()
+    def on_eraser(self):
+        if not self.IsEraser:
+            self.IsEraser = True
+            self.eraserButton.setStyleSheet("background-color:gray")
+        else:
+            self.IsEraser = False
+            self.eraserButton.setStyleSheet("background-color:white")
 
     @pyqtSlot()
     def on_segment(self):
