@@ -208,6 +208,9 @@ class Example(QWidget):
 
     @pyqtSlot()
     def on_clear(self):
+        self.IsEraser = False
+        self.eraserButton.setStyleSheet("background-color:white")
+
         self.overlay = np.zeros_like(self.image)
         self.seedLabel.setPixmap(QPixmap.fromImage(
                 self.get_qimage(self.get_image_with_overlay())))
